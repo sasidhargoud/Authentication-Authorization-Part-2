@@ -1,16 +1,26 @@
 import {Component} from 'react'
-
+import Cookies from 'js-cookies'
 import './index.css'
 
 class LoginForm extends Component {
   state = {
     username: '',
     password: '',
+    showSubmitError: false,
+    errMsg: '',
   }
 
-  onSubmitSuccess = () => {
+  onSubmitSuccess = jwtToken => {
+    Cookies.set('jwt_token', jwtToken, {expires: 30})
     const {history} = this.props
     history.replace('/')
+  }
+
+  onSubmitFailure = errMsg => {
+    this.setState({
+      showSubmitError: true,
+      errMsg,
+    })
   }
 
   submitForm = async event => {
@@ -26,7 +36,9 @@ class LoginForm extends Component {
     const data = await response.json()
     console.log(data)
     if (response.ok === true) {
-      this.onSubmitSuccess()
+      this.onSubmitSuccess(data.jwt_token)
+    } else {
+      this.onSubmitFailure(data.error_msg)
     }
   }
 
@@ -75,6 +87,7 @@ class LoginForm extends Component {
   }
 
   render() {
+    const {showSubmitError, errMsg} = this.state
     return (
       <div className="login-form-container">
         <img
@@ -98,6 +111,7 @@ class LoginForm extends Component {
           <button type="submit" className="login-button">
             Login
           </button>
+          {showSubmitError && <p className="error-message">*{errMsg}</p>}
         </form>
       </div>
     )
